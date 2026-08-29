@@ -192,6 +192,8 @@ func newUI() *UI {
 
 func main() {
 	go func() {
+		// 在窗口创建前启动监视协程，尽早设置暗色标题栏，避免启动闪白
+		startDarkTitleBarWatcher()
 		w := new(app.Window)
 		w.Option(
 			app.Title("SimpleAES"),
@@ -215,6 +217,9 @@ func run(w *app.Window) error {
 		switch e := e.(type) {
 		case app.DestroyEvent:
 			return e.Err
+		case app.ViewEvent:
+			// 窗口句柄就绪后让标题栏跟随暗色主题
+			setDarkTitleBar(e)
 		case app.FrameEvent:
 			gtx := app.NewContext(&ops, e)
 			ui.layout(gtx)
