@@ -1,0 +1,25 @@
+{
+    "FixedFileInfo": {
+      "FileVersion": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 0,
+        "Build": 0
+      },
+      "ProductVersion": {
+        "Major": 1,
+        "Minor": 0,
+        "Patch": 0,
+        "Build": 0
+      }
+    },
+    "StringFileInfo": {
+      "FileDescription": "SimpleAES - A simple AES encryption tool",
+      "FileVersion": "1.0.0",
+      "OriginalFilename": "SimpleAES.exe",
+      "ProductName": "SimpleAES",
+      "ProductVersion": "1.0.0"
+    },
+    "IconPath": "icon.ico",
+    "ManifestPath": ""
+  }
