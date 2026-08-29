@@ -328,10 +328,8 @@ func (ui *UI) layoutButtons(gtx layout.Context) layout.Dimensions {
 	action := material.Button(ui.th, &ui.action, actionLabel)
 
 	copyBtn := material.Button(ui.th, &ui.copy, "Copy Result")
-	copyBtn.Background = rgb(0x37474f)
 
 	clearBtn := material.Button(ui.th, &ui.clear, "Clear")
-	clearBtn.Background = rgb(0x37474f)
 
 	return layout.Flex{Axis: layout.Horizontal, Gap: gtx.Dp(unit.Dp(12))}.Layout(gtx,
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions { return action.Layout(gtx) }),
