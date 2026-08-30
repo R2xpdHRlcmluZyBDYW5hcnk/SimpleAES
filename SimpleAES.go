@@ -221,6 +221,8 @@ func run(w *app.Window) error {
 			// 窗口句柄就绪后让标题栏跟随暗色主题
 			setDarkTitleBar(e)
 		case app.FrameEvent:
+			// 首帧时窗口必定已显示，兜底确保标题栏为暗色
+			fixDarkTitleBarAfterFirstFrame()
 			gtx := app.NewContext(&ops, e)
 			ui.layout(gtx)
 			e.Frame(gtx.Ops)
@@ -332,7 +334,14 @@ func (ui *UI) layoutButtons(gtx layout.Context) layout.Dimensions {
 	clearBtn := material.Button(ui.th, &ui.clear, "Clear")
 
 	return layout.Flex{Axis: layout.Horizontal, Gap: gtx.Dp(unit.Dp(12))}.Layout(gtx,
-		layout.Rigid(func(gtx layout.Context) layout.Dimensions { return action.Layout(gtx) }),
+		layout.Rigid(func(gtx layout.Context) layout.Dimensions {
+			// 固定主按钮宽度：Encrypt/Decrypt 文案像素宽度不同，
+			// 按钮随内容伸缩会导致后面的按钮移位
+			if w := gtx.Dp(unit.Dp(96)); w <= gtx.Constraints.Max.X {
+				gtx.Constraints.Min.X = w
+			}
+			return action.Layout(gtx)
+		}),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions { return copyBtn.Layout(gtx) }),
 		layout.Rigid(func(gtx layout.Context) layout.Dimensions { return clearBtn.Layout(gtx) }),
 	)

@@ -7,3 +7,5 @@ import "gioui.org/app"
 func startDarkTitleBarWatcher() {}
 
 func setDarkTitleBar(e app.ViewEvent) {}
+
+func fixDarkTitleBarAfterFirstFrame() {}
