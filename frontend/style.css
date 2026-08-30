@@ -1,0 +1,152 @@
+:root {
+  /* 让滚动条等原生控件渲染为深色 */
+  color-scheme: dark;
+  --bg: #121212;
+  --fg: #e0e0e0;
+  --accent: #90caf9;
+  --border: #424242;
+  --muted: #9e9e9e;
+  --err: #ef5350;
+  --ok: #66bb6a;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  font-size: 14px;
+  user-select: none;
+}
+
+.container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.caption {
+  color: var(--muted);
+  font-size: 12px;
+  margin: 2px 0 0;
+}
+
+.radios {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.radios label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+input[type="radio"] {
+  accent-color: var(--accent);
+}
+
+.iter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.field,
+textarea {
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px;
+  outline: none;
+  font: inherit;
+  user-select: text;
+}
+
+.field:focus,
+textarea:focus {
+  border-color: var(--accent);
+}
+
+.iter-row input {
+  width: 110px;
+  background: var(--bg);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  outline: none;
+  font: inherit;
+}
+
+.iter-row input:focus {
+  border-color: var(--accent);
+}
+
+textarea {
+  flex: 1;
+  resize: none;
+  /* 横向自动换行不出横向滚动条，纵向超出时原生滚动条自动出现 */
+  overflow-x: hidden;
+  overflow-y: auto;
+  word-break: break-all;
+}
+
+.status {
+  min-height: 1.2em;
+}
+
+.status.err {
+  color: var(--err);
+}
+
+.status.ok {
+  color: var(--ok);
+}
+
+.buttons {
+  display: flex;
+  gap: 12px;
+}
+
+button {
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 18px;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+button:hover {
+  filter: brightness(1.1);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* 固定主按钮宽度：Encrypt/Decrypt 文案宽度不同，避免切换时后面按钮移位 */
+#action {
+  min-width: 96px;
+  text-align: center;
+}

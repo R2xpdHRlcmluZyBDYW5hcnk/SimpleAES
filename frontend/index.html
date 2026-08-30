@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SimpleAES</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>SimpleAES</h1>
+      <p class="caption">AES-256-GCM · PBKDF2-HMAC-SHA256</p>
+    </header>
+
+    <div class="radios">
+      <label><input type="radio" name="mode" value="encrypt" checked> Encrypt</label>
+      <label><input type="radio" name="mode" value="decrypt"> Decrypt</label>
+    </div>
+
+    <div class="iter-row">
+      <span>PBKDF2 iterations:</span>
+      <input id="iterations" type="number" value="600000" min="1000" max="10000000" step="1000">
+      <span class="caption">allowed range: 1000 - 10000000</span>
+    </div>
+
+    <textarea id="content" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+
+    <input id="password" type="password" placeholder="Password (press Enter to submit)" autocomplete="off">
+
+    <div id="status" class="status"></div>
+
+    <div class="buttons">
+      <button id="action">Encrypt</button>
+      <button id="copy">Copy Result</button>
+      <button id="clear">Clear</button>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

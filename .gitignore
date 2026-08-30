@@ -16,7 +16,8 @@ coverage.*
 
 # Build output
 dist/
-build/
+build/bin/
+build/debug/
 
 # Go workspace
 go.work

@@ -21,38 +21,23 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: "1.24"
+          go-version: "1.25"
 
-      - name: Install go-winres
-        run: go install github.com/tc-hib/go-winres@latest
-
-      - name: Generate Windows resources (icon + version info)
-        run: >-
-          go-winres simply
-          --arch ${{ matrix.goarch }}
-          --icon icon.ico
-          --manifest gui
-          --product-name "SimpleAES"
-          --file-description "SimpleAES - A simple AES encryption tool"
-          --product-version "${{ github.ref_name }}"
-          --file-version "${{ github.ref_name }}"
-          --original-filename "SimpleAES-${{ matrix.goarch }}.exe"
+      - name: Install Wails CLI
+        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
 
       - name: Build
-        env:
-          CGO_ENABLED: "0"
-          GOOS: windows
-          GOARCH: ${{ matrix.goarch }}
         run: >-
-          go build
-          -ldflags "-s -w -H windowsgui"
-          -o SimpleAES-${{ matrix.goarch }}.exe .
+          wails build -clean
+          -platform windows/${{ matrix.goarch }}
+          -webview2 embed
+          -o SimpleAES-${{ matrix.goarch }}.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: SimpleAES-${{ matrix.goarch }}
-          path: SimpleAES-${{ matrix.goarch }}.exe
+          path: build/bin/SimpleAES-${{ matrix.goarch }}.exe
 
   release:
     needs: build

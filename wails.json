@@ -1,0 +1,20 @@
+{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "SimpleAES",
+  "outputfilename": "SimpleAES",
+  "frontend:dir": "frontend",
+  "frontend:install": "",
+  "frontend:build": "",
+  "frontend:dev:watcher": "",
+  "frontend:dev:serverUrl": "",
+  "author": {
+    "name": "Glittering Canary"
+  },
+  "info": {
+    "companyName": "Glittering Canary",
+    "productName": "SimpleAES",
+    "productVersion": "0.2.0",
+    "copyright": "MIT License",
+    "comments": "SimpleAES - A simple AES encryption tool"
+  }
+}

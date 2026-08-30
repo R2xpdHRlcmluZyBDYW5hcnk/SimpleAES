@@ -1,14 +1,14 @@
 # SimpleAES
 
-一个使用 **AES-256-GCM** 加密的纯 Go 图形界面工具，基于 [Gio](https://gioui.org) 构建，无需 cgo。
+一个使用 **AES-256-GCM** 加密的桌面图形界面工具，基于 [Wails](https://wails.io)（Go + WebView2）构建。
 
 ## 特性
 
 - **AES-256-GCM** 认证加密，防篡改
 - **PBKDF2-HMAC-SHA256** 密钥派生，迭代次数可自定义（默认 600,000 次）
 - 随机 16 字节 salt + 12 字节 nonce
-- 纯 Go 实现（Gio GUI），无需 cgo，交叉编译友好
-- 暗色主题界面
+- 单个 exe 文件，Windows 11 开箱即用（内置 WebView2 引导程序）
+- 暗色主题界面，原生暗色标题栏
 - 密文为 Base64 文本，可直接复制粘贴
 - 向后兼容旧格式密文（无 `AES1` 前缀，固定 600,000 次迭代）
 
@@ -35,33 +35,26 @@
 ### 环境要求
 
 - Go 1.24+
-- [go-winres](https://github.com/tc-hib/go-winres)（可选，用于嵌入图标和版本信息）
+- [Wails CLI](https://wails.io/docs/gettingstarted/installation) v2
 
 ### 编译步骤
 
 ```bash
-# 1. 安装 go-winres（可选）
-go install github.com/tc-hib/go-winres@latest
+# 1. 安装 Wails CLI
+go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
 
-# 2. 生成 Windows 资源文件（图标 + 版本信息）
-go-winres simply --arch amd64,arm64 --icon icon.ico --manifest gui \
-  --product-name "SimpleAES" \
-  --file-description "SimpleAES - A simple AES encryption tool" \
-  --product-version "1.0.0" --file-version "1.0.0" \
-  --original-filename "SimpleAES.exe"
-
-# 3. 编译（纯 Go，无需 cgo）
-CGO_ENABLED=0 go build -ldflags "-s -w -H windowsgui" -o SimpleAES.exe .
+# 2. 编译（前端已内嵌，无需 Node.js）
+wails build -clean -webview2 embed
 ```
 
-> Windows PowerShell 中将 `CGO_ENABLED=0` 改为 `$env:CGO_ENABLED='0'`。
-> `-H windowsgui` 使程序启动时不弹出控制台窗口。
+产物位于 `build/bin/SimpleAES.exe`。`-webview2 embed` 会把 WebView2
+引导程序嵌入 exe：Windows 11 自带 WebView2 Runtime 可直接运行；
+若系统缺少 Runtime，首次启动会自动安装，无需用户手动处理。
 
 ### 交叉编译 Windows ARM64
 
-```powershell
-$env:CGO_ENABLED='0'; $env:GOOS='windows'; $env:GOARCH='arm64'
-go build -ldflags "-s -w -H windowsgui" -o SimpleAES-arm64.exe .
+```bash
+wails build -clean -platform windows/arm64 -webview2 embed -o SimpleAES-arm64.exe
 ```
 
 ## 发布
@@ -69,8 +62,8 @@ go build -ldflags "-s -w -H windowsgui" -o SimpleAES-arm64.exe .
 推送形如 `v*` 的 tag 即可触发 GitHub Actions 自动构建并发布：
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 Workflow 会自动构建 Windows AMD64 和 ARM64 两个版本并上传到 GitHub Release。
