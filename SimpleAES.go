@@ -9,6 +9,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"image"
 	"image/color"
 	"io"
 	"os"
@@ -16,10 +17,14 @@ import (
 	"strings"
 
 	"gioui.org/app"
+	"gioui.org/f32"
+	"gioui.org/gesture"
 	"gioui.org/io/clipboard"
 	"gioui.org/io/key"
+	"gioui.org/io/pointer"
 	"gioui.org/layout"
 	"gioui.org/op"
+	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget"
@@ -162,6 +167,14 @@ type UI struct {
 
 	focused bool
 
+	// 输入框滚动状态：视口尺寸固定，内容超出时在框内滚动
+	inputScroll   gesture.Scroll // 视口上的滚轮/触控板手势
+	inputBar      widget.Scrollbar
+	inputOff      int       // 当前滚动偏移(px)
+	inputContentH int       // 上一帧测得的内容总高度(px)
+	lastCaret     f32.Point // 用于检测光标移动
+	lastLen       int
+
 	// 暗色主题配色
 	border color.NRGBA
 	muted  color.NRGBA
@@ -302,7 +315,81 @@ func (ui *UI) layoutInput(gtx layout.Context) layout.Dimensions {
 	if ui.mode.Value == "decrypt" {
 		hint = "Paste Base64 ciphertext here (Decrypt mode)"
 	}
-	return ui.borderedEditor(gtx, &ui.input, hint)
+	border := widget.Border{
+		Color:        ui.border,
+		CornerRadius: unit.Dp(8),
+		Width:        unit.Dp(1),
+	}
+	return border.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+		return layout.UniformInset(unit.Dp(10)).Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+			// Flexed(1) 强制 Min=Max，视口尺寸固定：
+			// 内容多少都不会改变输入框和窗口的大小
+			viewport := gtx.Constraints.Max
+			viewportW, viewportH := viewport.X, viewport.Y
+			contentH := ui.inputContentH // 上一帧测得的内容总高度
+
+			// 滚轮/触控板滚动（滚动范围与 Gio 编辑器内部算法一致）
+			rangeY := pointer.ScrollRange{Min: -ui.inputOff, Max: max(0, contentH-ui.inputOff-viewportH)}
+			if d := ui.inputScroll.Update(gtx.Metric, gtx.Source, gtx.Now, gesture.Vertical, pointer.ScrollRange{}, rangeY); d != 0 {
+				ui.inputOff += d
+			}
+			// 滚动条拖动/点击，delta 为占整个内容长度的比例
+			if delta := ui.inputBar.ScrollDistance(); delta != 0 && contentH > 0 {
+				ui.inputOff += int(delta * float32(contentH))
+			}
+			// 光标移动或文本变化时，滚动到光标可见的位置
+			if gtx.Focused(&ui.input) {
+				cp := ui.input.CaretCoords()
+				l := ui.input.Len()
+				if cp != ui.lastCaret || l != ui.lastLen {
+					y := int(cp.Y)
+					lineH := gtx.Sp(ui.th.TextSize) * 3 / 2
+					if y < ui.inputOff {
+						ui.inputOff = y
+					} else if y+lineH > ui.inputOff+viewportH {
+						ui.inputOff = y + lineH - viewportH
+					}
+					ui.lastCaret = cp
+					ui.lastLen = l
+				}
+			}
+			ui.inputOff = min(max(ui.inputOff, 0), max(0, contentH-viewportH))
+
+			return layout.Stack{}.Layout(gtx,
+				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
+					// 在视口区域注册滚动手势
+					area := clip.Rect(image.Rectangle{Max: viewport}).Push(gtx.Ops)
+					ui.inputScroll.Add(gtx.Ops)
+					area.Pop()
+
+					// 裁剪到视口并按偏移绘制完整内容。编辑器在无限高度下布局，
+					// 其内部滚动范围恒为 0，不会与外层手势冲突；
+					// 宽度受限自动换行，永远不会出现横向滚动条
+					defer clip.Rect(image.Rectangle{Max: viewport}).Push(gtx.Ops).Pop()
+					defer op.Offset(image.Pt(0, -ui.inputOff)).Push(gtx.Ops).Pop()
+					cgtx := gtx
+					cgtx.Constraints.Min = image.Point{}
+					cgtx.Constraints.Max = image.Pt(viewportW, 1<<30)
+					dims := material.Editor(ui.th, &ui.input, hint).Layout(cgtx)
+					ui.inputContentH = dims.Size.Y
+					return layout.Dimensions{Size: viewport}
+				}),
+				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
+					// 内容不超出视口时不显示滚动条，
+					// 窗口拉大到全部容纳后滚动条自动消失
+					if ui.inputContentH <= viewportH {
+						return layout.Dimensions{}
+					}
+					bar := material.Scrollbar(ui.th, &ui.inputBar)
+					return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
+						return bar.Layout(gtx, layout.Vertical,
+							float32(ui.inputOff)/float32(ui.inputContentH),
+							float32(ui.inputOff+viewportH)/float32(ui.inputContentH))
+					})
+				}),
+			)
+		})
+	})
 }
 
 func (ui *UI) layoutPassword(gtx layout.Context) layout.Dimensions {
@@ -311,7 +398,8 @@ func (ui *UI) layoutPassword(gtx layout.Context) layout.Dimensions {
 
 func (ui *UI) layoutStatus(gtx layout.Context) layout.Dimensions {
 	if ui.status == "" {
-		return layout.Dimensions{}
+		// 预留一行高度，避免状态出现/消失时上方输入框高度跳动
+		return material.Body2(ui.th, " ").Layout(gtx)
 	}
 	l := material.Body2(ui.th, ui.status)
 	if ui.statusErr {
@@ -397,6 +485,7 @@ func (ui *UI) handleEvents(gtx layout.Context) {
 
 	if ui.clear.Clicked(gtx) {
 		ui.input.SetText("")
+		ui.inputOff = 0
 		ui.password.SetText("")
 		ui.iterations.SetText(strconv.Itoa(defaultIterations))
 		ui.status = ""
@@ -439,5 +528,7 @@ func (ui *UI) perform() {
 		ui.input.SetText(string(result))
 		ui.setStatus("Decrypted successfully", false)
 	}
+	// 新结果从顶部开始显示
+	ui.inputOff = 0
 	ui.password.SetText("")
 }
