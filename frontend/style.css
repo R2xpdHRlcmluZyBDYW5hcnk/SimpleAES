@@ -109,6 +109,9 @@ textarea {
 }
 
 .status {
+  /* 行高与 min-height 保持一致：有无状态文本时行盒高度相同，
+     切换模式清空状态不会引起输入框高度抖动 */
+  line-height: 1.2;
   min-height: 1.2em;
 }
 
