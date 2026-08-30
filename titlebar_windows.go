@@ -100,13 +100,18 @@ var frameFixOnce sync.Once
 // fixDarkTitleBarAfterFirstFrame 是最终兜底：首帧时窗口必定已显示。
 // 如果暗色属性设置得比窗口首次显示晚，DWM 不会自动重绘标题栏（标题栏会一直白着），
 // 这里重设属性并用 SWP_FRAMECHANGED 强制重算非客户区，保证标题栏最终变为黑色。
+// 注意：SetWindowPos 会同步向窗口线程发送消息，而 Gio 窗口线程在等待
+// FrameEvent.Frame() 返回期间不处理消息——在 UI 事件协程里同步调用会死锁
+// （进程还在但窗口永远不出现），因此放到独立协程里执行。
 func fixDarkTitleBarAfterFirstFrame() {
 	hwnd := mainHWND.Load()
 	if hwnd == 0 {
 		return
 	}
 	frameFixOnce.Do(func() {
-		applyDarkTitleBar(hwnd)
-		procSetWindowPos.Call(hwnd, 0, 0, 0, 0, 0, swpRepaintFrame)
+		go func() {
+			applyDarkTitleBar(hwnd)
+			procSetWindowPos.Call(hwnd, 0, 0, 0, 0, 0, swpRepaintFrame)
+		}()
 	})
 }
