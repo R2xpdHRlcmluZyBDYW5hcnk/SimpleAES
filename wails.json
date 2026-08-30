@@ -13,7 +13,7 @@
   "info": {
     "companyName": "Glittering Canary",
     "productName": "SimpleAES",
-    "productVersion": "0.2.0",
+    "productVersion": "0.1.0",
     "copyright": "MIT License",
     "comments": "SimpleAES - A simple AES encryption tool"
   }
