@@ -355,23 +355,30 @@ func (ui *UI) layoutInput(gtx layout.Context) layout.Dimensions {
 			}
 			ui.inputOff = min(max(ui.inputOff, 0), max(0, contentH-viewportH))
 
-			return layout.Stack{}.Layout(gtx,
+			// Alignment=E：滚动条吸附在输入框右边缘
+			return layout.Stack{Alignment: layout.E}.Layout(gtx,
 				layout.Expanded(func(gtx layout.Context) layout.Dimensions {
-					// 在视口区域注册滚动手势
-					area := clip.Rect(image.Rectangle{Max: viewport}).Push(gtx.Ops)
-					ui.inputScroll.Add(gtx.Ops)
-					area.Pop()
-
 					// 裁剪到视口并按偏移绘制完整内容。编辑器在无限高度下布局，
 					// 其内部滚动范围恒为 0，不会与外层手势冲突；
 					// 宽度受限自动换行，永远不会出现横向滚动条
-					defer clip.Rect(image.Rectangle{Max: viewport}).Push(gtx.Ops).Pop()
-					defer op.Offset(image.Pt(0, -ui.inputOff)).Push(gtx.Ops).Pop()
 					cgtx := gtx
 					cgtx.Constraints.Min = image.Point{}
 					cgtx.Constraints.Max = image.Pt(viewportW, 1<<30)
+					viewportClip := clip.Rect(image.Rectangle{Max: viewport}).Push(gtx.Ops)
+					offset := op.Offset(image.Pt(0, -ui.inputOff)).Push(gtx.Ops)
 					dims := material.Editor(ui.th, &ui.input, hint).Layout(cgtx)
 					ui.inputContentH = dims.Size.Y
+					offset.Pop()
+					viewportClip.Pop()
+
+					// 滚动手势注册在最上层并用 PassOp 放行：
+					// 滚轮到达本手势的同时，编辑器的点击/拖拽选中不受影响
+					pass := pointer.PassOp{}.Push(gtx.Ops)
+					area := clip.Rect(image.Rectangle{Max: viewport}).Push(gtx.Ops)
+					ui.inputScroll.Add(gtx.Ops)
+					area.Pop()
+					pass.Pop()
+
 					return layout.Dimensions{Size: viewport}
 				}),
 				layout.Stacked(func(gtx layout.Context) layout.Dimensions {
@@ -381,11 +388,9 @@ func (ui *UI) layoutInput(gtx layout.Context) layout.Dimensions {
 						return layout.Dimensions{}
 					}
 					bar := material.Scrollbar(ui.th, &ui.inputBar)
-					return layout.E.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
-						return bar.Layout(gtx, layout.Vertical,
-							float32(ui.inputOff)/float32(ui.inputContentH),
-							float32(ui.inputOff+viewportH)/float32(ui.inputContentH))
-					})
+					return bar.Layout(gtx, layout.Vertical,
+						float32(ui.inputOff)/float32(ui.inputContentH),
+						float32(ui.inputOff+viewportH)/float32(ui.inputContentH))
 				}),
 			)
 		})
