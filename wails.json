@@ -3,17 +3,17 @@
   "name": "SimpleAES",
   "outputfilename": "SimpleAES",
   "frontend:dir": "frontend",
-  "frontend:install": "",
-  "frontend:build": "",
-  "frontend:dev:watcher": "",
-  "frontend:dev:serverUrl": "",
+  "frontend:install": "bun install",
+  "frontend:build": "bun run build",
+  "frontend:dev:watcher": "bun run dev",
+  "frontend:dev:serverUrl": "auto",
   "author": {
     "name": "Glittering Canary"
   },
   "info": {
     "companyName": "Glittering Canary",
     "productName": "SimpleAES",
-    "productVersion": "0.1.0",
+    "productVersion": "0.2.0-beta.1",
     "copyright": "MIT License",
     "comments": "SimpleAES - A simple AES encryption tool"
   }

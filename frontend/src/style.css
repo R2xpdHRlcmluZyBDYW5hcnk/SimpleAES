@@ -25,6 +25,10 @@ body {
   user-select: none;
 }
 
+#app {
+  height: 100%;
+}
+
 .container {
   height: 100%;
   display: flex;
@@ -102,15 +106,12 @@ textarea:focus {
 textarea {
   flex: 1;
   resize: none;
-  /* 横向自动换行不出横向滚动条，纵向超出时原生滚动条自动出现 */
   overflow-x: hidden;
   overflow-y: auto;
   word-break: break-all;
 }
 
 .status {
-  /* 行高与 min-height 保持一致：有无状态文本时行盒高度相同，
-     切换模式清空状态不会引起输入框高度抖动 */
   line-height: 1.2;
   min-height: 1.2em;
 }
@@ -137,6 +138,7 @@ button {
   font: inherit;
   font-weight: 500;
   cursor: pointer;
+  transition: filter 0.15s ease, opacity 0.15s ease;
 }
 
 button:hover {
@@ -148,8 +150,7 @@ button:disabled {
   cursor: default;
 }
 
-/* 固定主按钮宽度：Encrypt/Decrypt 文案宽度不同，避免切换时后面按钮移位 */
-#action {
+.action-btn {
   min-width: 96px;
   text-align: center;
 }
