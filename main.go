@@ -35,6 +35,14 @@ func main() {
 			WindowIsTranslucent:  true,
 			BackdropType:         windows.Acrylic,
 			WebviewIsTransparent: true,
+			CustomTheme: &windows.ThemeSettings{
+				DarkModeTitleBar:          windows.RGB(0x12, 0x12, 0x12),
+				DarkModeTitleBarInactive:  windows.RGB(0x18, 0x18, 0x18),
+				DarkModeTitleText:         windows.RGB(0xff, 0xff, 0xff),
+				DarkModeTitleTextInactive: windows.RGB(0x99, 0x99, 0x99),
+				DarkModeBorder:            windows.RGB(0x2a, 0x2a, 0x2a),
+				DarkModeBorderInactive:    windows.RGB(0x20, 0x20, 0x20),
+			},
 		},
 	})
 	if err != nil {
