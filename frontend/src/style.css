@@ -1,12 +1,14 @@
 :root {
   /* 让滚动条等原生控件渲染为深色 */
   color-scheme: dark;
-  --bg-tint: rgba(18, 18, 18, 0.42);
-  --input-bg: rgba(28, 28, 28, 0.72);
+  --input-bg: rgba(255, 255, 255, 0.05);
+  --input-hover: rgba(255, 255, 255, 0.08);
+  --input-focus: rgba(255, 255, 255, 0.06);
   --fg: #f5f5f5;
   --accent: #90caf9;
-  --border: rgba(255, 255, 255, 0.16);
-  --muted: #b8b8b8;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-focus: #90caf9;
+  --muted: #a8a8a8;
   --err: #ff6b6b;
   --ok: #69db7c;
 }
@@ -21,7 +23,7 @@ body {
   height: 100%;
   background: transparent;
   color: var(--fg);
-  font-family: "Segoe UI", system-ui, sans-serif;
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
   font-size: 14px;
   user-select: none;
 }
@@ -36,7 +38,7 @@ body {
   flex-direction: column;
   gap: 12px;
   padding: 16px;
-  background: var(--bg-tint);
+  background: transparent;
 }
 
 header h1 {
@@ -83,12 +85,18 @@ textarea {
   outline: none;
   font: inherit;
   user-select: text;
-  backdrop-filter: blur(8px);
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.field:hover,
+textarea:hover {
+  background: var(--input-hover);
 }
 
 .field:focus,
 textarea:focus {
-  border-color: var(--accent);
+  background: var(--input-focus);
+  border-color: var(--border-focus);
 }
 
 .iter-row input {
@@ -100,10 +108,16 @@ textarea:focus {
   padding: 8px 10px;
   outline: none;
   font: inherit;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.iter-row input:hover {
+  background: var(--input-hover);
 }
 
 .iter-row input:focus {
-  border-color: var(--accent);
+  background: var(--input-focus);
+  border-color: var(--border-focus);
 }
 
 textarea {

@@ -24,8 +24,8 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		// 透明背景支持 Acrylic 材质透出
-		BackgroundColour: &options.RGBA{R: 0x12, G: 0x12, B: 0x12, A: 0x00},
+		// 透明背景支持 Mica Alt (Tabbed) 材质透出
+		BackgroundColour: &options.RGBA{R: 0x00, G: 0x00, B: 0x00, A: 0x00},
 		OnStartup:        app.startup,
 		Bind: []interface{}{
 			app,
@@ -33,16 +33,8 @@ func main() {
 		Windows: &windows.Options{
 			Theme:                windows.Dark,
 			WindowIsTranslucent:  true,
-			BackdropType:         windows.Acrylic,
+			BackdropType:         windows.Tabbed,
 			WebviewIsTransparent: true,
-			CustomTheme: &windows.ThemeSettings{
-				DarkModeTitleBar:          windows.RGB(0x12, 0x12, 0x12),
-				DarkModeTitleBarInactive:  windows.RGB(0x18, 0x18, 0x18),
-				DarkModeTitleText:         windows.RGB(0xff, 0xff, 0xff),
-				DarkModeTitleTextInactive: windows.RGB(0x99, 0x99, 0x99),
-				DarkModeBorder:            windows.RGB(0x2a, 0x2a, 0x2a),
-				DarkModeBorderInactive:    windows.RGB(0x20, 0x20, 0x20),
-			},
 		},
 	})
 	if err != nil {
