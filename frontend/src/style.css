@@ -1,11 +1,12 @@
 :root {
   /* 让滚动条等原生控件渲染为深色 */
   color-scheme: dark;
-  --bg: #121212;
+  --bg: rgba(20, 20, 20, 0.72);
+  --input-bg: rgba(30, 30, 30, 0.65);
   --fg: #e0e0e0;
   --accent: #90caf9;
-  --border: #424242;
-  --muted: #9e9e9e;
+  --border: rgba(255, 255, 255, 0.14);
+  --muted: #a0a0a0;
   --err: #ef5350;
   --ok: #66bb6a;
 }
@@ -73,7 +74,7 @@ input[type="radio"] {
 
 .field,
 textarea {
-  background: var(--bg);
+  background: var(--input-bg);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -81,6 +82,7 @@ textarea {
   outline: none;
   font: inherit;
   user-select: text;
+  backdrop-filter: blur(8px);
 }
 
 .field:focus,
@@ -90,7 +92,7 @@ textarea:focus {
 
 .iter-row input {
   width: 110px;
-  background: var(--bg);
+  background: var(--input-bg);
   color: var(--fg);
   border: 1px solid var(--border);
   border-radius: 8px;
