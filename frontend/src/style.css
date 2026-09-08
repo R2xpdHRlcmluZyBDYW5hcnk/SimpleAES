@@ -1,14 +1,14 @@
 :root {
   /* 让滚动条等原生控件渲染为深色 */
   color-scheme: dark;
-  --bg: rgba(20, 20, 20, 0.72);
-  --input-bg: rgba(30, 30, 30, 0.65);
-  --fg: #e0e0e0;
+  --bg-tint: rgba(18, 18, 18, 0.42);
+  --input-bg: rgba(28, 28, 28, 0.72);
+  --fg: #f5f5f5;
   --accent: #90caf9;
-  --border: rgba(255, 255, 255, 0.14);
-  --muted: #a0a0a0;
-  --err: #ef5350;
-  --ok: #66bb6a;
+  --border: rgba(255, 255, 255, 0.16);
+  --muted: #b8b8b8;
+  --err: #ff6b6b;
+  --ok: #69db7c;
 }
 
 * {
@@ -19,7 +19,7 @@ html,
 body {
   margin: 0;
   height: 100%;
-  background: var(--bg);
+  background: transparent;
   color: var(--fg);
   font-family: "Segoe UI", system-ui, sans-serif;
   font-size: 14px;
@@ -36,6 +36,7 @@ body {
   flex-direction: column;
   gap: 12px;
   padding: 16px;
+  background: var(--bg-tint);
 }
 
 header h1 {

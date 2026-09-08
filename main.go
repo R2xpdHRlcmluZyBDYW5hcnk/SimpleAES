@@ -24,7 +24,7 @@ func main() {
 		AssetServer: &assetserver.Options{
 			Assets: assets,
 		},
-		// 透明背景支持 Mica 材质透出
+		// 透明背景支持 Acrylic 材质透出
 		BackgroundColour: &options.RGBA{R: 0x12, G: 0x12, B: 0x12, A: 0x00},
 		OnStartup:        app.startup,
 		Bind: []interface{}{
@@ -33,7 +33,7 @@ func main() {
 		Windows: &windows.Options{
 			Theme:                windows.Dark,
 			WindowIsTranslucent:  true,
-			BackdropType:         windows.Mica,
+			BackdropType:         windows.Acrylic,
 			WebviewIsTransparent: true,
 		},
 	})
