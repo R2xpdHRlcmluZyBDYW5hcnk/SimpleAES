@@ -59,6 +59,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
+          prerelease: ${{ contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'preview') }}
+          make_latest: ${{ !(contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'preview')) }}
           files: |
             artifacts/SimpleAES-amd64/SimpleAES-amd64.exe
             artifacts/SimpleAES-arm64/SimpleAES-arm64.exe
