@@ -1,22 +1,14 @@
 package main
 
 import (
-	"context"
 	"fmt"
 )
 
-// App 是绑定到前端的 Wails 后端。
-type App struct {
-	ctx context.Context
-}
+// App 是绑定到前端的 Wails 后端服务。
+type App struct{}
 
 func NewApp() *App {
 	return &App{}
-}
-
-// startup 在应用启动时保存上下文（Wails 生命周期钩子）。
-func (a *App) startup(ctx context.Context) {
-	a.ctx = ctx
 }
 
 // Encrypt 加密明文，返回 Base64 密文。

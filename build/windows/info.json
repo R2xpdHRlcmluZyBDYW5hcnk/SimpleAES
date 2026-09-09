@@ -1,15 +1,26 @@
 {
 	"fixed": {
-		"file_version": "{{.Info.ProductVersion}}"
+		"file_version": "0.2.0.2",
+		"product_version": "0.2.0.2"
 	},
 	"info": {
 		"0000": {
-			"ProductVersion": "{{.Info.ProductVersion}}",
-			"CompanyName": "{{.Info.CompanyName}}",
-			"FileDescription": "{{.Info.ProductName}}",
-			"LegalCopyright": "{{.Info.Copyright}}",
-			"ProductName": "{{.Info.ProductName}}",
-			"Comments": "{{.Info.Comments}}"
+			"ProductVersion": "0.2.0-beta.2",
+			"FileVersion": "0.2.0-beta.2",
+			"CompanyName": "Glittering Canary",
+			"FileDescription": "SimpleAES",
+			"LegalCopyright": "MIT License",
+			"ProductName": "SimpleAES",
+			"Comments": "SimpleAES - A simple AES encryption tool"
+		},
+		"0409": {
+			"ProductVersion": "0.2.0-beta.2",
+			"FileVersion": "0.2.0-beta.2",
+			"CompanyName": "Glittering Canary",
+			"FileDescription": "SimpleAES",
+			"LegalCopyright": "MIT License",
+			"ProductName": "SimpleAES",
+			"Comments": "SimpleAES - A simple AES encryption tool"
 		}
 	}
 }

@@ -69,7 +69,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, nextTick } from "vue";
-import { Encrypt, Decrypt } from "../wailsjs/go/main/App";
+import { Encrypt, Decrypt } from "../bindings/SimpleAES/app";
 
 const MIN_ITERS = 1000;
 const MAX_ITERS = 10000000;

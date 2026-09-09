@@ -27,17 +27,16 @@ jobs:
           bun-version: latest
 
       - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v2/cmd/wails@v2.15.0
+        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.18
 
       - name: Build
         run: >-
-          wails build -clean
-          -platform windows/${{ matrix.goarch }}
-          -webview2 embed
-          -o SimpleAES-${{ matrix.goarch }}.exe
+          wails3 task windows:build
+          ARCH=${{ matrix.goarch }}
+          OUTPUT_NAME=SimpleAES-${{ matrix.goarch }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
           name: SimpleAES-${{ matrix.goarch }}
-          path: build/bin/SimpleAES-${{ matrix.goarch }}.exe
+          path: bin/SimpleAES-${{ matrix.goarch }}.exe

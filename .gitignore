@@ -16,6 +16,8 @@ coverage.*
 
 # Build output
 dist/
+bin/
+.task/
 build/bin/
 build/debug/
 frontend/dist/
