@@ -24,9 +24,11 @@ if [ ! -f "$SRC/go.mod" ]; then
 fi
 
 # 源码放在 /mnt/c 上时 WSL 的 I/O 很慢，同步到原生文件系统再编译。
+# .git 也要带上（只有几百 KB）：go-winres 的 --product-version=git-tag 靠
+# `git describe --tags` 取版本号，副本里没有仓库时它会静默回退成 0.0.0.0。
 DST="$HOME/dev/$(basename "$SRC")"
 mkdir -p "$DST"
-rsync -a --delete --exclude '.git' --exclude 'bin' --exclude '*.syso' "$SRC/" "$DST/"
+rsync -a --delete --exclude 'bin' --exclude '*.syso' "$SRC/" "$DST/"
 cd "$DST"
 
 # go generate 会 go run ./svgrast 并执行它：必须在交叉编译环境生效之前跑，
