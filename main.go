@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	"image/color"
 	"strconv"
@@ -16,6 +17,13 @@ import (
 )
 
 //go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon build/windows/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - A simple AES encryption tool" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
+
+// appIconPNG 用作窗口图标（标题栏 / 任务栏）。
+// Fyne 的 SetIcon 走标准库 image.Decode，不认 ICO，所以这里用 PNG；
+// 嵌入到 exe 文件本身的图标则由上面的 go-winres 负责，两者互不替代。
+//
+//go:embed build/appicon.png
+var appIconPNG []byte
 
 const (
 	appTitle = "SimpleAES"
@@ -119,9 +127,10 @@ type ui struct {
 	content   *widget.Entry
 	password  *widget.Entry
 
-	actionBtn *widget.Button
-	copyBtn   *widget.Button
-	clearBtn  *widget.Button
+	actionBtn    *widget.Button
+	actionHolder *fyne.Container
+	copyBtn      *widget.Button
+	clearBtn     *widget.Button
 
 	status    *canvas.Text
 	statusMsg string
@@ -135,6 +144,7 @@ func main() {
 
 	w := a.NewWindow(appTitle)
 	w.SetPadded(false)
+	w.SetIcon(fyne.NewStaticResource("appicon.png", appIconPNG))
 
 	u := newUI(w)
 	w.SetContent(u.build())
@@ -203,8 +213,11 @@ func (u *ui) build() fyne.CanvasObject {
 		captionText(fmt.Sprintf("allowed range: %d - %d", minIterations, maxIterations)),
 	)
 
+	// 主按钮固定最小宽度，避免 Encrypt / Decrypt 文案宽度不同导致整行按钮位移。
+	u.actionHolder = container.New(minSizeLayout{w: actionBtnW}, u.actionBtn)
+
 	buttons := container.New(layout.NewCustomPaddedHBoxLayout(itemGap),
-		container.New(minSizeLayout{w: actionBtnW}, u.actionBtn),
+		u.actionHolder,
 		u.copyBtn,
 		u.clearBtn,
 	)

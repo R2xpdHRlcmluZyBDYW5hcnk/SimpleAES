@@ -58,6 +58,30 @@ func TestSwitchingModeUpdatesButtonAndPlaceholder(t *testing.T) {
 	}
 }
 
+// TestActionButtonWidthIsStable 覆盖「切换 Encrypt/Decrypt 时下方按钮跟着位移」的问题：
+// 主按钮被限制为固定最小宽度，两种模式下的宽度必须一致。
+func TestActionButtonWidthIsStable(t *testing.T) {
+	u := newTestUI(t)
+
+	if u.actionBtn.Text != modeEncrypt {
+		t.Fatalf("expected %q, got %q", modeEncrypt, u.actionBtn.Text)
+	}
+	encryptW := u.actionHolder.MinSize().Width
+
+	u.mode.SetSelected(modeDecrypt)
+	decryptW := u.actionHolder.MinSize().Width
+
+	if u.actionBtn.Text != modeDecrypt {
+		t.Fatalf("expected %q, got %q", modeDecrypt, u.actionBtn.Text)
+	}
+	if encryptW != decryptW {
+		t.Errorf("action button width changed between modes: %v -> %v", encryptW, decryptW)
+	}
+	if encryptW < actionBtnW {
+		t.Errorf("action button width = %v, want at least %v", encryptW, actionBtnW)
+	}
+}
+
 func TestStatusColors(t *testing.T) {
 	u := newTestUI(t)
 
