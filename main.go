@@ -6,6 +6,7 @@ import (
 	"image/color"
 	"strconv"
 	"strings"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -204,10 +205,28 @@ func main() {
 	w.CenterOnScreen()
 
 	w.Show()
-	applyDarkTitleBar(w)
 	w.Canvas().Focus(u.content)
+	setupWindowChrome(w)
 
 	a.Run()
+}
+
+// setupWindowChrome 负责深色标题栏与清晰的窗口图标。
+//
+// Fyne 没有 onShown 回调，而 driver.NativeWindow.RunNative 是立即执行的——窗口还没
+// 创建时拿不到 HWND。所以这里在窗口句柄出现之前轮询，拿到后再到主线程上设置。
+func setupWindowChrome(w fyne.Window) {
+	go func() {
+		for i := 0; i < 400; i++ {
+			var hwnd uintptr
+			fyne.DoAndWait(func() { hwnd = nativeWindowHandle(w) })
+			if hwnd != 0 {
+				fyne.Do(func() { applyWindowChrome(w) })
+				return
+			}
+			time.Sleep(25 * time.Millisecond)
+		}
+	}()
 }
 
 func newUI(w fyne.Window) *ui {
