@@ -15,9 +15,16 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+//go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon build/windows/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - A simple AES encryption tool" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
+
 const (
 	appTitle = "SimpleAES"
 	subtitle = "AES-256-GCM · PBKDF2-HMAC-SHA256"
+
+	modeEncrypt = "Encrypt"
+	modeDecrypt = "Decrypt"
+
+	passwordPlaceHolder = "Password (press Enter to submit)"
 
 	windowWidth  = 720
 	windowHeight = 560
@@ -147,17 +154,16 @@ func newUI(w fyne.Window) *ui {
 
 	u.content = widget.NewMultiLineEntry()
 	u.content.Wrapping = fyne.TextWrapBreak
-	u.content.SetPlaceHolder(u.placeholderText())
 
 	u.password = widget.NewEntry()
 	u.password.Password = true
-	u.password.SetPlaceHolder("Password (press Enter to submit)")
+	u.password.SetPlaceHolder(passwordPlaceHolder)
 	u.password.OnSubmitted = func(string) { u.perform() }
 
 	u.iterEntry = widget.NewEntry()
 	u.iterEntry.SetText(strconv.Itoa(defaultIterations))
 
-	u.actionBtn = widget.NewButton("Encrypt", func() { u.perform() })
+	u.actionBtn = widget.NewButton(modeEncrypt, func() { u.perform() })
 	u.actionBtn.Importance = widget.HighImportance
 
 	u.copyBtn = widget.NewButton("Copy Result", func() { u.copyResult() })
@@ -169,10 +175,14 @@ func newUI(w fyne.Window) *ui {
 	u.status = canvas.NewText("", colMuted)
 	u.status.TextSize = 14
 
-	u.mode = widget.NewRadioGroup([]string{"Encrypt", "Decrypt"}, func(string) { u.applyMode() })
+	// mode 必须最后创建：SetSelected 会触发 applyMode，
+	// 而 applyMode 依赖 content / actionBtn 已经初始化。
+	u.mode = widget.NewRadioGroup([]string{modeEncrypt, modeDecrypt}, func(string) { u.applyMode() })
 	u.mode.Horizontal = true
 	u.mode.Required = true
-	u.mode.SetSelected("Encrypt")
+	u.mode.SetSelected(modeEncrypt)
+
+	u.applyMode()
 
 	return u
 }
@@ -228,7 +238,7 @@ func captionText(s string) *canvas.Text {
 }
 
 func (u *ui) isDecrypt() bool {
-	return u.mode.Selected == "Decrypt"
+	return u.mode != nil && u.mode.Selected == modeDecrypt
 }
 
 func (u *ui) placeholderText() string {

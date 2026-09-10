@@ -67,6 +67,9 @@ jobs:
           echo $bin >> $env:GITHUB_PATH
           echo "CC=aarch64-w64-mingw32-gcc" >> $env:GITHUB_ENV
 
+      - name: Generate Windows resources
+        run: go generate ./...
+
       - name: Build
         env:
           CGO_ENABLED: "1"
