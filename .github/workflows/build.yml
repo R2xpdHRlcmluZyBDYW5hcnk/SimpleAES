@@ -6,6 +6,11 @@ on:
 permissions:
   contents: read
 
+# 缓存目录放进工作区，key 里带上目标架构，避免 amd64 / arm64 互相覆盖编译缓存。
+env:
+  GOMODCACHE: ${{ github.workspace }}\.gocache\mod
+  GOCACHE: ${{ github.workspace }}\.gocache\build
+
 jobs:
   test:
     runs-on: windows-latest
@@ -17,6 +22,17 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version: "1.25"
+          cache: false
+
+      - name: Cache Go caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}\.gocache\mod
+            ${{ github.workspace }}\.gocache\build
+          key: gocache-${{ runner.os }}-amd64-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            gocache-${{ runner.os }}-amd64-
 
       - name: Add MinGW-w64 to PATH
         shell: pwsh
@@ -40,6 +56,17 @@ jobs:
         uses: actions/setup-go@v7
         with:
           go-version: "1.25"
+          cache: false
+
+      - name: Cache Go caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}\.gocache\mod
+            ${{ github.workspace }}\.gocache\build
+          key: gocache-${{ runner.os }}-${{ matrix.goarch }}-${{ hashFiles('go.sum') }}
+          restore-keys: |
+            gocache-${{ runner.os }}-${{ matrix.goarch }}-
 
       - name: Set up x86_64 toolchain
         if: matrix.goarch == 'amd64'
