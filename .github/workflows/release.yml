@@ -30,6 +30,10 @@ jobs:
   build:
     needs: test
     runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        goarch: [amd64, arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -39,22 +43,44 @@ jobs:
         with:
           go-version: "1.25"
 
-      - name: Add MinGW-w64 to PATH
+      - name: Set up x86_64 toolchain
+        if: matrix.goarch == 'amd64'
         shell: pwsh
         run: echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
+
+      - name: Set up aarch64 cross toolchain
+        if: matrix.goarch == 'arm64'
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest"
+          $asset = $release.assets | Where-Object { $_.name -like "*-ucrt-x86_64.zip" } | Select-Object -First 1
+          if (-not $asset) { throw "no llvm-mingw ucrt-x86_64 asset in the latest release" }
+
+          $zip = Join-Path $env:RUNNER_TEMP "llvm-mingw.zip"
+          Invoke-WebRequest $asset.browser_download_url -OutFile $zip -UseBasicParsing
+          New-Item -ItemType Directory -Force "C:\llvm-mingw" | Out-Null
+          tar -xf $zip -C "C:\llvm-mingw"
+
+          $bin = (Get-ChildItem "C:\llvm-mingw" -Recurse -Directory -Filter bin | Select-Object -First 1).FullName
+          if (-not (Test-Path (Join-Path $bin "aarch64-w64-mingw32-gcc.exe"))) {
+            Get-ChildItem $bin | Select-Object -ExpandProperty Name
+            throw "aarch64-w64-mingw32-gcc.exe not found in $bin"
+          }
+          echo $bin >> $env:GITHUB_PATH
+          echo "CC=aarch64-w64-mingw32-gcc" >> $env:GITHUB_ENV
 
       - name: Build
         env:
           CGO_ENABLED: "1"
           GOOS: windows
-          GOARCH: amd64
-        run: go build -trimpath -ldflags="-s -w -H windowsgui" -o bin/SimpleAES-amd64.exe .
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -trimpath -ldflags="-s -w -H windowsgui" -o bin/SimpleAES-${{ matrix.goarch }}.exe .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: SimpleAES-amd64
-          path: bin/SimpleAES-amd64.exe
+          name: SimpleAES-${{ matrix.goarch }}
+          path: bin/SimpleAES-${{ matrix.goarch }}.exe
 
   release:
     needs: build
@@ -72,4 +98,5 @@ jobs:
           make_latest: ${{ !(contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'preview')) }}
           files: |
             artifacts/SimpleAES-amd64/SimpleAES-amd64.exe
+            artifacts/SimpleAES-arm64/SimpleAES-arm64.exe
           generate_release_notes: true

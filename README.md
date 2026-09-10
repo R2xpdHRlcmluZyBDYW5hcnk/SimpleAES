@@ -59,7 +59,7 @@ git tag v0.2.0
 git push origin v0.2.0
 ```
 
-Workflow 会先跑测试，通过后再构建 Windows AMD64 版本并上传到 GitHub Release。
+Workflow 会先跑测试，通过后再构建 Windows AMD64 与 ARM64 两个版本并上传到 GitHub Release。
 
 ## License
 
