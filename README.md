@@ -70,16 +70,26 @@ wsl -d Ubuntu -- bash -c "tr -d '\r' < ./wsl-build.sh > /tmp/b.sh && bash /tmp/b
 
 ## 图标
 
-图标唯一来源是 [assets/appicon.svg](assets/appicon.svg)（黑底白锁）。`go generate ./...` 会把它栅格化成两份产物：
+唯一来源是 `assets/` 下的 SVG：16/24/32/48 各有一张**按像素手调**的稿子
+（[appicon-16.svg](assets/appicon-16.svg) …），更大的尺寸用基准稿
+[appicon.svg](assets/appicon.svg) 放大。`go generate ./...` 把它们栅格化成一张
+多尺寸 ICO（16/24/32/48/64/128/256），再由 go-winres 写进 exe 资源：
 
-| 产物 | 用途 |
+| 用途 | 取用方式 |
 | --- | --- |
-| `assets/icon.ico` | exe 文件自身的资源图标（Explorer / 开始菜单），并嵌入 exe |
-| `assets/windowicon/icon-{16,24,32,48}.png` | 标题栏与任务栏的窗口图标 |
+| exe 文件图标（Explorer / 开始菜单） | 资源里的图标组，由系统自行选取尺寸 |
+| 标题栏与任务栏的窗口图标 | [titlebar_windows.go](titlebar_windows.go) 按窗口 DPI 算出槽位物理尺寸，用 `PrivateExtractIconsW` 取出**正好等大**的图标后 `WM_SETICON` 交给系统 |
 
-之所以要逐尺寸预生成：Windows 的窗口图标只接受位图（HICON），不认 SVG。若只给一张大图，
-系统会自行缩小到 16/32px，边缘就糊了；这里按系统实际请求的尺寸（`SM_CXSMICON` / `SM_CXICON`）
-取 1:1 的位图，所以在 200% 缩放的高分屏下依然清晰。生成器在 [svgrast/](svgrast/)。
+三个坑，改动前请先读：
+
+1. **不要让 Fyne 代管窗口图标。** 它只会把图标栅格化成一张 256px 位图，系统再缩小，
+   边缘就糊了。
+2. **oksvg 把 `stroke-width` 当作设备像素**，不随 viewBox→目标尺寸缩放（`SetTarget`
+   只改变换矩阵）。所以放大基准稿时描边会细成一根线——[svgrast/main.go](svgrast/main.go)
+   在解析前按 `target/viewBox` 换算描边宽度。同理，`<rect>` 必须**同时**写 `rx` 和
+   `ry`：oksvg 缺省 `ry` 为 0，而 rasterx 只要 `rx<=0 || ry<=0` 就画成直角矩形。
+3. **ICO 条目必须是经典 BMP 格式。** go-winres 会把 ICO 条目原样搬进 `RT_ICON`，
+   而 PNG 压缩的条目取不出来（实测 `LoadImage` 各尺寸一律返回 NULL）。
 
 ## 版本与发布
 

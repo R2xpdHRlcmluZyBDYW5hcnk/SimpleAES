@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "embed"
 	"fmt"
 	"image/color"
 	"strconv"
@@ -17,20 +16,17 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-// 图标以 assets/appicon.svg 为唯一来源：先栅格化成 exe 用的多尺寸 .ico 和窗口用的
-// 逐尺寸 PNG，再由 go-winres 写入 exe 资源。改完 SVG 跑一次 go generate ./... 即可。
+// 图标源稿在 assets/：16/24/32/48 各有一张按像素手调的稿子（appicon-<尺寸>.svg），
+// 更大的尺寸用基准稿 appicon.svg 放大。go generate 把它们栅格化成一张多尺寸 .ico，
+// 再由 go-winres 写进 exe 资源。
 //
-//go:generate go run ./svgrast assets/appicon.svg assets/icon.ico assets/windowicon
+//go:generate go run ./svgrast assets/icon.ico
 //go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon assets/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - A simple AES encryption tool" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
 
-// appIconSVG 用作窗口图标（标题栏 / 任务栏）。Fyne 认 SVG，会按 256px 栅格化后
-// 交给系统，因此在各 DPI 下都保持清晰。
-//
-// 注意：exe 文件自身的图标由上面的 go-winres 生成（Windows 资源只接受位图，
-// 不能直接嵌 SVG），两者是不同用途，互不替代。
-//
-//go:embed assets/appicon.svg
-var appIconSVG []byte
+// 窗口图标（标题栏 / 任务栏）不走 Fyne，而是由 titlebar_windows.go 用 WM_SETICON
+// 把 exe 自己资源里的图标按尺寸取出来交给系统：Fyne 只会栅格化一张 256px 位图，
+// 系统缩小后边缘发糊；而 oksvg 把 stroke-width 当作设备像素、不随 viewBox 缩放，
+// 放大出来的锁梁会细成一根线。exe 文件自身的图标与此同源（assets/icon.ico）。
 
 const (
 	appTitle = "SimpleAES"
@@ -200,7 +196,6 @@ func main() {
 
 	w := a.NewWindow(appTitle)
 	w.SetPadded(false)
-	w.SetIcon(fyne.NewStaticResource("appicon.svg", appIconSVG))
 
 	u := newUI(w)
 	w.SetContent(u.build())

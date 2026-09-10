@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- 大尺寸（64/128/256）基准稿；16/24/32/48 各有按像素手调的版本 appicon-<尺寸>.svg -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
   <rect x="0" y="0" width="48" height="48" rx="9" ry="9" fill="#000000"/>
   <path d="M14 24v-8a10 10 0 0 1 20 0v8" fill="none" stroke="#ffffff" stroke-width="6"/>
