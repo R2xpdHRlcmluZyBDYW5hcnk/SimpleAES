@@ -17,7 +17,11 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-//go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon build/windows/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - A simple AES encryption tool" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
+// 图标以 assets/appicon.svg 为唯一来源：先栅格化成 exe 用的多尺寸 .ico 和窗口用的
+// 逐尺寸 PNG，再由 go-winres 写入 exe 资源。改完 SVG 跑一次 go generate ./... 即可。
+//
+//go:generate go run ./svgrast assets/appicon.svg assets/icon.ico assets/windowicon
+//go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon assets/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - A simple AES encryption tool" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
 
 // appIconSVG 用作窗口图标（标题栏 / 任务栏）。Fyne 认 SVG，会按 256px 栅格化后
 // 交给系统，因此在各 DPI 下都保持清晰。
@@ -25,7 +29,7 @@ import (
 // 注意：exe 文件自身的图标由上面的 go-winres 生成（Windows 资源只接受位图，
 // 不能直接嵌 SVG），两者是不同用途，互不替代。
 //
-//go:embed build/appicon.svg
+//go:embed assets/appicon.svg
 var appIconSVG []byte
 
 const (
