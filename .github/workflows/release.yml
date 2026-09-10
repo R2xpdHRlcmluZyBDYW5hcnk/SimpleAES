@@ -79,12 +79,11 @@ jobs:
         if: matrix.goarch == 'arm64'
         shell: pwsh
         run: |
-          $release = Invoke-RestMethod "https://api.github.com/repos/mstorsjo/llvm-mingw/releases/latest"
-          $asset = $release.assets | Where-Object { $_.name -like "*-ucrt-x86_64.zip" } | Select-Object -First 1
-          if (-not $asset) { throw "no llvm-mingw ucrt-x86_64 asset in the latest release" }
-
+          # 直接钉死版本，避免用 GitHub API 查最新版时被匿名速率限制打断。
+          # 与本地 WSL 构建（wsl-build.sh）使用同一版本。
+          $ver = "20260908"
           $zip = Join-Path $env:RUNNER_TEMP "llvm-mingw.zip"
-          Invoke-WebRequest $asset.browser_download_url -OutFile $zip -UseBasicParsing
+          Invoke-WebRequest "https://github.com/mstorsjo/llvm-mingw/releases/download/$ver/llvm-mingw-$ver-ucrt-x86_64.zip" -OutFile $zip -UseBasicParsing
           New-Item -ItemType Directory -Force "C:\llvm-mingw" | Out-Null
           tar -xf $zip -C "C:\llvm-mingw"
 
