@@ -8,10 +8,9 @@ on:
 permissions:
   contents: write
 
-# 缓存目录放进工作区，key 里带上目标架构，避免 amd64 / arm64 互相覆盖编译缓存。
-env:
-  GOMODCACHE: ${{ github.workspace }}\.gocache\mod
-  GOCACHE: ${{ github.workspace }}\.gocache\build
+# 不做任何缓存：依赖下载与编译每次从零开始，换取可预期的构建。
+# 若将来要加回缓存，注意 test 与 build 不能共用一个 key（build 带 -trimpath，编译动作
+# ID 与 test 不同，先命中的 test 会让缓存冻结、build 每次重编全部依赖），且 key 必须带架构。
 
 jobs:
   test:
@@ -25,16 +24,6 @@ jobs:
         with:
           go-version: "1.25"
           cache: false
-
-      - name: Cache Go caches
-        uses: actions/cache@v6
-        with:
-          path: |
-            ${{ github.workspace }}\.gocache\mod
-            ${{ github.workspace }}\.gocache\build
-          key: gocache-${{ runner.os }}-amd64-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            gocache-${{ runner.os }}-amd64-
 
       - name: Add MinGW-w64 to PATH
         shell: pwsh
@@ -53,22 +42,16 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # go-winres 用 `git describe --tags` 生成 exe 版本号；浅克隆里没有 tag，
+          # 它会静默退回 0.0.0.0。
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v7
         with:
           go-version: "1.25"
           cache: false
-
-      - name: Cache Go caches
-        uses: actions/cache@v6
-        with:
-          path: |
-            ${{ github.workspace }}\.gocache\mod
-            ${{ github.workspace }}\.gocache\build
-          key: gocache-${{ runner.os }}-${{ matrix.goarch }}-${{ hashFiles('go.sum') }}
-          restore-keys: |
-            gocache-${{ runner.os }}-${{ matrix.goarch }}-
 
       - name: Set up x86_64 toolchain
         if: matrix.goarch == 'amd64'
