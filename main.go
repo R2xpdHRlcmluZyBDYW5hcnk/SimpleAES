@@ -18,12 +18,14 @@ import (
 
 //go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon build/windows/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - A simple AES encryption tool" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
 
-// appIconPNG 用作窗口图标（标题栏 / 任务栏）。
-// Fyne 的 SetIcon 走标准库 image.Decode，不认 ICO，所以这里用 PNG；
-// 嵌入到 exe 文件本身的图标则由上面的 go-winres 负责，两者互不替代。
+// appIconSVG 用作窗口图标（标题栏 / 任务栏）。Fyne 认 SVG，会按 256px 栅格化后
+// 交给系统，因此在各 DPI 下都保持清晰。
 //
-//go:embed build/appicon.png
-var appIconPNG []byte
+// 注意：exe 文件自身的图标由上面的 go-winres 生成（Windows 资源只接受位图，
+// 不能直接嵌 SVG），两者是不同用途，互不替代。
+//
+//go:embed build/appicon.svg
+var appIconSVG []byte
 
 const (
 	appTitle = "SimpleAES"
@@ -61,6 +63,24 @@ var (
 // aesTheme 在 Fyne 内置深色主题的基础上，套用原 Wails 版 style.css 的配色。
 type aesTheme struct {
 	fyne.Theme
+}
+
+func newAppTheme() fyne.Theme {
+	return aesTheme{Theme: theme.DarkTheme()}
+}
+
+// noBoldTheme 只把字体降为普通字重，其余（颜色、尺寸）仍沿用 aesTheme。
+//
+// Fyne 的 widget.Button 固定用 RichTextStyleStrong 渲染按钮文字，写死在
+// widget/button.go 里，只能从主题的 Font 查找处把它改回普通字重，因此这里
+// 通过 container.NewThemeOverride 只在按钮子树内生效，标题等其它地方不受影响。
+type noBoldTheme struct {
+	fyne.Theme
+}
+
+func (t noBoldTheme) Font(style fyne.TextStyle) fyne.Resource {
+	style.Bold = false
+	return t.Theme.Font(style)
 }
 
 func (t aesTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
@@ -140,11 +160,11 @@ type ui struct {
 
 func main() {
 	a := app.New()
-	a.Settings().SetTheme(aesTheme{Theme: theme.DarkTheme()})
+	a.Settings().SetTheme(newAppTheme())
 
 	w := a.NewWindow(appTitle)
 	w.SetPadded(false)
-	w.SetIcon(fyne.NewStaticResource("appicon.png", appIconPNG))
+	w.SetIcon(fyne.NewStaticResource("appicon.svg", appIconSVG))
 
 	u := newUI(w)
 	w.SetContent(u.build())
@@ -216,10 +236,13 @@ func (u *ui) build() fyne.CanvasObject {
 	// 主按钮固定最小宽度，避免 Encrypt / Decrypt 文案宽度不同导致整行按钮位移。
 	u.actionHolder = container.New(minSizeLayout{w: actionBtnW}, u.actionBtn)
 
-	buttons := container.New(layout.NewCustomPaddedHBoxLayout(itemGap),
-		u.actionHolder,
-		u.copyBtn,
-		u.clearBtn,
+	buttons := container.NewThemeOverride(
+		container.New(layout.NewCustomPaddedHBoxLayout(itemGap),
+			u.actionHolder,
+			u.copyBtn,
+			u.clearBtn,
+		),
+		noBoldTheme{newAppTheme()},
 	)
 
 	top := container.New(layout.NewCustomPaddedVBoxLayout(itemGap),
