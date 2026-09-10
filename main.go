@@ -83,6 +83,37 @@ func (t noBoldTheme) Font(style fyne.TextStyle) fyne.Resource {
 	return t.Theme.Font(style)
 }
 
+// fontTheme 用外部字体资源覆盖主题字体，颜色与尺寸仍沿用内嵌主题。
+type fontTheme struct {
+	fyne.Theme
+
+	regular, bold, italic, boldItalic fyne.Resource
+}
+
+func (t fontTheme) Font(style fyne.TextStyle) fyne.Resource {
+	switch {
+	case style.Monospace || style.Symbol:
+		return t.Theme.Font(style)
+	case style.Bold && style.Italic:
+		return t.boldItalic
+	case style.Bold:
+		return t.bold
+	case style.Italic:
+		return t.italic
+	}
+	return t.regular
+}
+
+// baseTheme 依次叠加：Fyne 深色主题 → 本项目配色 → 系统 UI 字体（若可用）。
+func baseTheme() fyne.Theme {
+	th := newAppTheme()
+	regular, bold, italic, boldItalic, ok := loadUIFonts()
+	if !ok {
+		return th
+	}
+	return fontTheme{Theme: th, regular: regular, bold: bold, italic: italic, boldItalic: boldItalic}
+}
+
 func (t aesTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) color.Color {
 	switch name {
 	case theme.ColorNameBackground:
@@ -160,7 +191,7 @@ type ui struct {
 
 func main() {
 	a := app.New()
-	a.Settings().SetTheme(newAppTheme())
+	a.Settings().SetTheme(baseTheme())
 
 	w := a.NewWindow(appTitle)
 	w.SetPadded(false)
@@ -242,7 +273,7 @@ func (u *ui) build() fyne.CanvasObject {
 			u.copyBtn,
 			u.clearBtn,
 		),
-		noBoldTheme{newAppTheme()},
+		noBoldTheme{baseTheme()},
 	)
 
 	top := container.New(layout.NewCustomPaddedVBoxLayout(itemGap),
