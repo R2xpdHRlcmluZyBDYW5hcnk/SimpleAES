@@ -70,18 +70,13 @@ func newAppTheme() fyne.Theme {
 	return aesTheme{Theme: theme.DarkTheme()}
 }
 
-// noBoldTheme 只把字体降为普通字重，其余（颜色、尺寸）仍沿用 aesTheme。
-//
-// Fyne 的 widget.Button 固定用 RichTextStyleStrong 渲染按钮文字，写死在
-// widget/button.go 里，只能从主题的 Font 查找处把它改回普通字重，因此这里
-// 通过 container.NewThemeOverride 只在按钮子树内生效，标题等其它地方不受影响。
-type noBoldTheme struct {
-	fyne.Theme
-}
-
-func (t noBoldTheme) Font(style fyne.TextStyle) fyne.Resource {
-	style.Bold = false
-	return t.Theme.Font(style)
+// Fyne 的 widget.Button 固定用 widget.RichTextStyleStrong 渲染按钮文字
+// （widget/button.go:119），字重写死在样式表里。这个样式表是导出的可变包变量，
+// 改掉它就等于让按钮用普通字重——而且测量与绘制读的是同一份样式，不会出现
+// “按粗体量框、按普通字重画”的偏移（实测那样会让按钮文字整体偏左 1.5~4.5 逻辑像素）。
+// 不要用子树 ThemeOverride 换字重来做这件事：Fyne 的文本测量走应用级主题。
+func init() {
+	widget.RichTextStyleStrong.TextStyle = fyne.TextStyle{}
 }
 
 // fontTheme 用外部字体资源覆盖主题字体，颜色与尺寸仍沿用内嵌主题。
@@ -285,13 +280,11 @@ func (u *ui) build() fyne.CanvasObject {
 	// 主按钮固定最小宽度，避免 Encrypt / Decrypt 文案宽度不同导致整行按钮位移。
 	u.actionHolder = container.New(minSizeLayout{w: actionBtnW}, u.actionBtn)
 
-	buttons := container.NewThemeOverride(
-		container.New(layout.NewCustomPaddedHBoxLayout(itemGap),
-			u.actionHolder,
-			u.copyBtn,
-			u.clearBtn,
-		),
-		noBoldTheme{baseTheme()},
+	// 按钮字重已由 init 里的 RichTextStyleStrong 统一处理，这里不需要额外的主题层。
+	buttons := container.New(layout.NewCustomPaddedHBoxLayout(itemGap),
+		u.actionHolder,
+		u.copyBtn,
+		u.clearBtn,
 	)
 
 	top := container.New(layout.NewCustomPaddedVBoxLayout(itemGap),
