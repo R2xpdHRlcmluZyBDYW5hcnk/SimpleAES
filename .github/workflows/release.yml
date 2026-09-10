@@ -12,6 +12,7 @@ jobs:
   build:
     runs-on: windows-latest
     strategy:
+      fail-fast: false
       matrix:
         goarch: [amd64, arm64]
     steps:
@@ -23,19 +24,21 @@ jobs:
         with:
           go-version: "1.25"
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - name: Install Wails CLI
-        run: go install github.com/wailsapp/wails/v3/cmd/wails3@v3.0.0-beta.18
+      - name: Add MinGW-w64 to PATH
+        shell: pwsh
+        run: |
+          if ("${{ matrix.goarch }}" -eq "arm64") {
+            echo "C:\msys64\clangarm64\bin" >> $env:GITHUB_PATH
+          } else {
+            echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
+          }
 
       - name: Build
-        run: >-
-          wails3 task windows:build
-          ARCH=${{ matrix.goarch }}
-          OUTPUT_NAME=SimpleAES-${{ matrix.goarch }}
+        env:
+          CGO_ENABLED: "1"
+          GOOS: windows
+          GOARCH: ${{ matrix.goarch }}
+        run: go build -trimpath -ldflags="-s -w -H windowsgui" -o bin/SimpleAES-${{ matrix.goarch }}.exe .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
