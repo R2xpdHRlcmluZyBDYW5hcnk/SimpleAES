@@ -9,12 +9,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  test:
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        goarch: [amd64, arm64]
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -26,25 +22,39 @@ jobs:
 
       - name: Add MinGW-w64 to PATH
         shell: pwsh
-        run: |
-          if ("${{ matrix.goarch }}" -eq "arm64") {
-            echo "C:\msys64\clangarm64\bin" >> $env:GITHUB_PATH
-          } else {
-            echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
-          }
+        run: echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
+
+      - name: Test
+        run: go test ./...
+
+  build:
+    needs: test
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: "1.25"
+
+      - name: Add MinGW-w64 to PATH
+        shell: pwsh
+        run: echo "C:\msys64\mingw64\bin" >> $env:GITHUB_PATH
 
       - name: Build
         env:
           CGO_ENABLED: "1"
           GOOS: windows
-          GOARCH: ${{ matrix.goarch }}
-        run: go build -trimpath -ldflags="-s -w -H windowsgui" -o bin/SimpleAES-${{ matrix.goarch }}.exe .
+          GOARCH: amd64
+        run: go build -trimpath -ldflags="-s -w -H windowsgui" -o bin/SimpleAES-amd64.exe .
 
       - name: Upload artifact
         uses: actions/upload-artifact@v7
         with:
-          name: SimpleAES-${{ matrix.goarch }}
-          path: bin/SimpleAES-${{ matrix.goarch }}.exe
+          name: SimpleAES-amd64
+          path: bin/SimpleAES-amd64.exe
 
   release:
     needs: build
@@ -62,5 +72,4 @@ jobs:
           make_latest: ${{ !(contains(github.ref_name, 'beta') || contains(github.ref_name, 'rc') || contains(github.ref_name, 'alpha') || contains(github.ref_name, 'preview')) }}
           files: |
             artifacts/SimpleAES-amd64/SimpleAES-amd64.exe
-            artifacts/SimpleAES-arm64/SimpleAES-arm64.exe
           generate_release_notes: true
