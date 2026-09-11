@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"strconv"
 	"testing"
 
@@ -48,7 +49,7 @@ func TestSwitchingModeUpdatesButtonAndPlaceholder(t *testing.T) {
 	if u.actionBtn.Text != modeDecrypt {
 		t.Errorf("action button = %q, want %q", u.actionBtn.Text, modeDecrypt)
 	}
-	if u.content.PlaceHolder != "Paste Base64 ciphertext here (Decrypt mode)" {
+	if u.content.PlaceHolder != placeholderDecrypt {
 		t.Errorf("content placeholder = %q", u.content.PlaceHolder)
 	}
 
@@ -129,13 +130,13 @@ func TestPerformValidation(t *testing.T) {
 	u := newTestUI(t)
 
 	u.perform()
-	if u.statusMsg != "Content is empty" || !u.isError {
+	if u.statusMsg != msgEmptyContent || !u.isError {
 		t.Errorf("empty content: status=%q err=%v", u.statusMsg, u.isError)
 	}
 
 	u.content.SetText("plaintext")
 	u.perform()
-	if u.statusMsg != "Password is empty" || !u.isError {
+	if u.statusMsg != msgEmptyPassword || !u.isError {
 		t.Errorf("empty password: status=%q err=%v", u.statusMsg, u.isError)
 	}
 
@@ -143,7 +144,7 @@ func TestPerformValidation(t *testing.T) {
 	for _, bad := range []string{"", "abc", strconv.Itoa(minIterations - 1), strconv.Itoa(maxIterations + 1)} {
 		u.iterEntry.SetText(bad)
 		u.perform()
-		want := "Iterations must be an integer between " + strconv.Itoa(minIterations) + " and " + strconv.Itoa(maxIterations)
+		want := fmt.Sprintf(msgItersRange, minIterations, maxIterations)
 		if u.statusMsg != want {
 			t.Errorf("iterations %q: status=%q want %q", bad, u.statusMsg, want)
 		}

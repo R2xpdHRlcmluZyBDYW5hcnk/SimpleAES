@@ -94,7 +94,7 @@ func decrypt(data []byte, password string) ([]byte, error) {
 
 	// 检查长度是否合法
 	if len(body) < saltSize+nonceSize+tagSize {
-		return nil, errors.New("invalid ciphertext")
+		return nil, errors.New("密文格式无效")
 	}
 
 	// 提取salt, nonce和ciphertext
@@ -119,7 +119,7 @@ func decrypt(data []byte, password string) ([]byte, error) {
 	// 尝试解密
 	plaintext, err := gcm.Open(nil, nonce, ciphertext, nil)
 	if err != nil {
-		return nil, errors.New("incorrect password or corrupted data")
+		return nil, errors.New("密码错误或数据已损坏")
 	}
 
 	return plaintext, nil

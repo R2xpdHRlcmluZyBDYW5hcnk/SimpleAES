@@ -14,7 +14,7 @@ func NewApp() *App {
 // Encrypt 加密明文，返回 Base64 密文。
 func (a *App) Encrypt(content, password string, iterations int) (string, error) {
 	if iterations < minIterations || iterations > maxIterations {
-		return "", fmt.Errorf("iterations must be an integer between %d and %d", minIterations, maxIterations)
+		return "", fmt.Errorf("迭代次数必须在 %d - %d 之间", minIterations, maxIterations)
 	}
 	out, err := encrypt([]byte(content), password, iterations)
 	if err != nil {

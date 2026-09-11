@@ -21,7 +21,7 @@ import (
 // 再由 go-winres 写进 exe 资源。
 //
 //go:generate go run ./svgrast assets/icon.ico
-//go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon assets/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - A simple AES encryption tool" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
+//go:generate go run github.com/tc-hib/go-winres@v0.3.3 simply --arch amd64,arm64 --icon assets/icon.ico --manifest gui --product-name SimpleAES --file-description "SimpleAES - 简单的 AES 加密工具" --copyright "MIT License" --original-filename SimpleAES.exe --product-version=git-tag --file-version=git-tag
 
 // 窗口图标（标题栏 / 任务栏）不走 Fyne，而是由 titlebar_windows.go 用 WM_SETICON
 // 把 exe 自己资源里的图标按尺寸取出来交给系统：Fyne 只会栅格化一张 256px 位图，
@@ -32,10 +32,25 @@ const (
 	appTitle = "SimpleAES"
 	subtitle = "AES-256-GCM · PBKDF2-HMAC-SHA256"
 
-	modeEncrypt = "Encrypt"
-	modeDecrypt = "Decrypt"
+	modeEncrypt = "加密"
+	modeDecrypt = "解密"
 
-	passwordPlaceHolder = "Password (press Enter to submit)"
+	passwordPlaceHolder = "输入密码（按回车执行）"
+
+	btnCopy   = "复制结果"
+	btnClear  = "清空"
+	lblIters  = "PBKDF2 迭代次数："
+	rangeInfo = "允许范围：%d - %d"
+
+	placeholderEncrypt = "在此输入明文（加密模式）"
+	placeholderDecrypt = "在此粘贴 Base64 密文（解密模式）"
+
+	msgEmptyContent  = "内容不能为空"
+	msgEmptyPassword = "密码不能为空"
+	msgItersRange    = "迭代次数必须是 %d - %d 之间的整数"
+	msgEncrypted     = "加密成功（PBKDF2 %d 次迭代）"
+	msgDecrypted     = "解密成功"
+	msgCopied        = "结果已复制到剪贴板"
 
 	windowWidth  = 720
 	windowHeight = 560
@@ -240,10 +255,10 @@ func newUI(w fyne.Window) *ui {
 	u.actionBtn = widget.NewButton(modeEncrypt, func() { u.perform() })
 	u.actionBtn.Importance = widget.HighImportance
 
-	u.copyBtn = widget.NewButton("Copy Result", func() { u.copyResult() })
+	u.copyBtn = widget.NewButton(btnCopy, func() { u.copyResult() })
 	u.copyBtn.Importance = widget.HighImportance
 
-	u.clearBtn = widget.NewButton("Clear", func() { u.clearAll() })
+	u.clearBtn = widget.NewButton(btnClear, func() { u.clearAll() })
 	u.clearBtn.Importance = widget.HighImportance
 
 	u.status = canvas.NewText("", colMuted)
@@ -321,18 +336,18 @@ func (u *ui) isDecrypt() bool {
 
 func (u *ui) placeholderText() string {
 	if u.isDecrypt() {
-		return "Paste Base64 ciphertext here (Decrypt mode)"
+		return placeholderDecrypt
 	}
-	return "Enter plaintext here (Encrypt mode)"
+	return placeholderEncrypt
 }
 
 func (u *ui) applyMode() {
 	u.setStatus("", false)
 	u.content.SetPlaceHolder(u.placeholderText())
 	if u.isDecrypt() {
-		u.actionBtn.SetText("Decrypt")
+		u.actionBtn.SetText(modeDecrypt)
 	} else {
-		u.actionBtn.SetText("Encrypt")
+		u.actionBtn.SetText(modeEncrypt)
 	}
 }
 
@@ -371,17 +386,17 @@ func (u *ui) perform() {
 	password := u.password.Text
 
 	if strings.TrimSpace(content) == "" {
-		u.setStatus("Content is empty", true)
+		u.setStatus(msgEmptyContent, true)
 		return
 	}
 	if password == "" {
-		u.setStatus("Password is empty", true)
+		u.setStatus(msgEmptyPassword, true)
 		return
 	}
 
 	iters, err := strconv.Atoi(strings.TrimSpace(u.iterEntry.Text))
 	if err != nil || iters < minIterations || iters > maxIterations {
-		u.setStatus(fmt.Sprintf("Iterations must be an integer between %d and %d", minIterations, maxIterations), true)
+		u.setStatus(fmt.Sprintf(msgItersRange, minIterations, maxIterations), true)
 		return
 	}
 
@@ -402,19 +417,19 @@ func (u *ui) perform() {
 		fyne.Do(func() {
 			u.setLoading(false)
 			if opErr != nil {
-				op := "Encryption"
+				op := "加密"
 				if decrypting {
-					op = "Decryption"
+					op = "解密"
 				}
-				u.setStatus(fmt.Sprintf("%s failed: %v", op, opErr), true)
+				u.setStatus(fmt.Sprintf("%s失败：%v", op, opErr), true)
 				return
 			}
 			u.content.SetText(out)
 			u.password.SetText("")
 			if decrypting {
-				u.setStatus("Decrypted successfully", false)
+				u.setStatus(msgDecrypted, false)
 			} else {
-				u.setStatus(fmt.Sprintf("Encrypted successfully (PBKDF2 %d iterations)", iters), false)
+				u.setStatus(fmt.Sprintf(msgEncrypted, iters), false)
 			}
 		})
 	}()
@@ -426,7 +441,7 @@ func (u *ui) copyResult() {
 		return
 	}
 	fyne.CurrentApp().Clipboard().SetContent(text)
-	u.setStatus("Result copied to clipboard", false)
+	u.setStatus("结果已复制到剪贴板", false)
 }
 
 func (u *ui) clearAll() {
