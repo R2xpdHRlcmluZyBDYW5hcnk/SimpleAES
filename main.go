@@ -287,9 +287,9 @@ func (u *ui) build() fyne.CanvasObject {
 	)
 
 	iterRow := container.New(layout.NewCustomPaddedHBoxLayout(8),
-		widget.NewLabel("PBKDF2 iterations:"),
+		widget.NewLabel(lblIters),
 		container.New(minSizeLayout{w: iterFieldW}, u.iterEntry),
-		captionText(fmt.Sprintf("allowed range: %d - %d", minIterations, maxIterations)),
+		captionText(fmt.Sprintf(rangeInfo, minIterations, maxIterations)),
 	)
 
 	// 主按钮固定最小宽度，避免 Encrypt / Decrypt 文案宽度不同导致整行按钮位移。

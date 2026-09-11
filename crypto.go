@@ -78,7 +78,7 @@ func decrypt(data []byte, password string) ([]byte, error) {
 	// 解码Base64
 	fullCiphertext, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("密文不是有效的 Base64 文本")
 	}
 
 	// 识别格式并提取迭代次数
@@ -88,7 +88,7 @@ func decrypt(data []byte, password string) ([]byte, error) {
 		iterations = int(binary.BigEndian.Uint32(fullCiphertext[len(formatMagic) : len(formatMagic)+4]))
 		body = fullCiphertext[len(formatMagic)+4:]
 		if iterations < 1 || iterations > maxIterations {
-			return nil, errors.New("invalid iteration count in ciphertext")
+			return nil, errors.New("密文中的迭代次数无效")
 		}
 	}
 
