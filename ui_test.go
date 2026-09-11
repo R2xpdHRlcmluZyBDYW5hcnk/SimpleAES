@@ -28,7 +28,7 @@ func TestNewUIInitialState(t *testing.T) {
 	if u.actionBtn.Text != modeEncrypt {
 		t.Errorf("action button = %q, want %q", u.actionBtn.Text, modeEncrypt)
 	}
-	if u.content.PlaceHolder != "Enter plaintext here (Encrypt mode)" {
+	if u.content.PlaceHolder != placeholderEncrypt {
 		t.Errorf("content placeholder = %q", u.content.PlaceHolder)
 	}
 	if u.iterEntry.Text != strconv.Itoa(defaultIterations) {
